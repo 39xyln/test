@@ -192,7 +192,12 @@ RC Table::remove_record_hander(){
       LOG_ERROR("Failed to flush page.rc=%d:%s", rc, strrc(rc));
       return rc;
     }
+    rc = data_buffer_pool_->close_file();
     data_buffer_pool_ = nullptr;
+    if (OB_FAIL(rc)) {
+      LOG_ERROR("data buffer pool 关闭文件失败");
+      return rc;
+    }
   }
   return rc;
 }
