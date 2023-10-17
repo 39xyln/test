@@ -53,10 +53,17 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
     const FieldMeta *field_meta = table_meta.field(i + sys_field_num);
     const AttrType field_type = field_meta->type();
     const AttrType value_type = values[i].attr_type();
+    const int field_len = field_meta->len();
+    const int value_len = values[i].length();
     if (field_type != value_type) {  // TODO try to convert the value type to field type
       LOG_WARN("field type mismatch. table=%s, field=%s, field type=%d, value_type=%d",
           table_name, field_meta->name(), field_type, value_type);
       return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+    }
+    if (field_len < value_len) {  // TODO try to convert the value type to field type
+      LOG_WARN("field len mismatch. table=%s, field=%s, field len=%d, value_len=%d",
+          table_name, field_meta->name(), field_len, value_len);
+      return RC::SCHEMA_FIELD_LEN_MISMATCH;
     }
   }
 
