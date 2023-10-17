@@ -224,6 +224,8 @@ public:
    */
   RC dispose_page(PageNum page_num);
 
+  RC dispose_all_page();
+
   /**
    * @brief 释放指定文件关联的页的内存
    * 如果已经脏， 则刷到磁盘，除了pinned page

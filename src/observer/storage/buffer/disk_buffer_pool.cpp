@@ -415,6 +415,30 @@ RC DiskBufferPool::dispose_page(PageNum page_num)
   return RC::SUCCESS;
 }
 
+RC DiskBufferPool::dispose_all_page()
+{
+  std::list<Frame *> used = frame_manager_.find_list(file_desc_);
+  for(std::list<Frame *>::iterator it = used.begin();it != used.end();++it) {
+    Frame *frame = *it;
+    if(frame->pin_count() > 0) {
+      LOG_WARN("The page has been pinned, file_desc:%d, pagenum:%d, pin_count=%d",
+       frame->file_desc(), frame->page().page_num, frame->pin_count());
+      continue;
+    }
+
+    if (frame->dirty())
+    {
+      RC rc = dispose_page(frame->page().page_num);
+      if(rc != RC::SUCCESS) {
+        ("Failed to flush all pages' of %s.", file_name_.c_str());
+        return rc;
+      }
+    }
+    frame_manager_.free(file_desc_,frame->page().page_num,frame);
+  }
+  return RC::SUCCESS;
+}
+
 RC DiskBufferPool::unpin_page(Frame *frame)
 {
   frame->unpin();
