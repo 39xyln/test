@@ -92,6 +92,5 @@ RC CommandExecutor::execute(SQLStageEvent *sql_event)
       return RC::UNIMPLENMENT;
     }
   }
-
   return RC::INTERNAL;
 }
