@@ -14,8 +14,12 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include <vector>
+#include <memory>
+
 #include "common/rc.h"
 #include "sql/stmt/stmt.h"
+#include "storage/field/field_meta.h"
 
 class Table;
 
@@ -27,7 +31,12 @@ class UpdateStmt : public Stmt
 {
 public:
   UpdateStmt() = default;
-  UpdateStmt(Table *table, Value *values, int value_amount);
+
+  //插入数据需要表，插入的值即可
+  //UpdateStmt(Table *table, Value *values, int value_amount);
+
+  //更新表需要表名、字段、更改的值以及过滤的条件
+  UpdateStmt(Table *table,const FieldMeta *fieldmeta,const Value *values, std::vector<ConditionSqlNode> conditions);
 
 public:
   static RC create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt);
@@ -37,17 +46,27 @@ public:
   {
     return table_;
   }
-  Value *values() const
+  const FieldMeta *fieldmeta() const
+  {
+    return fieldmeta_;
+  }
+  const Value *values() const
   {
     return values_;
   }
-  int value_amount() const
+  const std::vector<ConditionSqlNode> &conditions() const
   {
-    return value_amount_;
+    return conditions_;
+  }
+  StmtType type() const override
+  {
+    return StmtType::UPDATE;
   }
 
 private:
+  //表名、字段、更改的值以及过滤的条件
   Table *table_ = nullptr;
-  Value *values_ = nullptr;
-  int value_amount_ = 0;
+  const FieldMeta *fieldmeta_= nullptr;
+  const Value *values_ = nullptr;
+  std::vector<ConditionSqlNode> conditions_;
 };

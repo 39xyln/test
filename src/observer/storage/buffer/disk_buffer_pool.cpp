@@ -430,7 +430,7 @@ RC DiskBufferPool::dispose_all_page()
     {
       RC rc = dispose_page(frame->page().page_num);
       if(rc != RC::SUCCESS) {
-        ("Failed to flush all pages' of %s.", file_name_.c_str());
+        LOG_WARN("Failed to flush all pages' of %s.", file_name_.c_str());
         return rc;
       }
     }
