@@ -21,6 +21,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/table_get_logical_operator.h"
 #include "sql/operator/insert_logical_operator.h"
 #include "sql/operator/delete_logical_operator.h"
+#include "sql/operator/update_logical_operator.h"
 #include "sql/operator/join_logical_operator.h"
 #include "sql/operator/project_logical_operator.h"
 #include "sql/operator/explain_logical_operator.h"
@@ -31,6 +32,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/filter_stmt.h"
 #include "sql/stmt/insert_stmt.h"
 #include "sql/stmt/delete_stmt.h"
+#include "sql/stmt/update_stmt.h"
 #include "sql/stmt/explain_stmt.h"
 
 using namespace std;
@@ -57,6 +59,11 @@ RC LogicalPlanGenerator::create(Stmt *stmt, unique_ptr<LogicalOperator> &logical
     case StmtType::DELETE: {
       DeleteStmt *delete_stmt = static_cast<DeleteStmt *>(stmt);
       rc = create_plan(delete_stmt, logical_operator);
+    } break;
+
+    case StmtType::UPDATE: {
+      UpdateStmt *update_stmt = static_cast<UpdateStmt *>(stmt);
+      rc = create_plan(update_stmt, logical_operator);
     } break;
 
     case StmtType::EXPLAIN: {
@@ -131,9 +138,13 @@ RC LogicalPlanGenerator::create_plan(
   std::vector<unique_ptr<Expression>> cmp_exprs;
   const std::vector<FilterUnit *> &filter_units = filter_stmt->filter_units();
   for (const FilterUnit *filter_unit : filter_units) {
+
+    //每个FilterUnit对象，将其左侧和右侧的FilterObj对象分别赋值给filter_obj_left和filter_obj_right。
     const FilterObj &filter_obj_left = filter_unit->left();
     const FilterObj &filter_obj_right = filter_unit->right();
 
+    //根据filter_obj_left和filter_obj_right中的is_attr属性，
+    //判断是使用FieldExpr还是ValueExpr来创建表达式对象，并用unique_ptr进行封装。
     unique_ptr<Expression> left(filter_obj_left.is_attr
                                          ? static_cast<Expression *>(new FieldExpr(filter_obj_left.field))
                                          : static_cast<Expression *>(new ValueExpr(filter_obj_left.value)));
@@ -143,15 +154,19 @@ RC LogicalPlanGenerator::create_plan(
                                           : static_cast<Expression *>(new ValueExpr(filter_obj_right.value)));
 
     ComparisonExpr *cmp_expr = new ComparisonExpr(filter_unit->comp(), std::move(left), std::move(right));
+    //将cmp_expr加入到cmp_exprs中。
     cmp_exprs.emplace_back(cmp_expr);
   }
 
   unique_ptr<PredicateLogicalOperator> predicate_oper;
   if (!cmp_exprs.empty()) {
+    //创建联结表达式，初始化为AND和cmp_exprs集
     unique_ptr<ConjunctionExpr> conjunction_expr(new ConjunctionExpr(ConjunctionExpr::Type::AND, cmp_exprs));
+    //将conjunction_expr指针所有权转向predicate_oper,conjunction_expr为空
     predicate_oper = unique_ptr<PredicateLogicalOperator>(new PredicateLogicalOperator(std::move(conjunction_expr)));
   }
 
+  //将predicate_oper指针所有权转向logical_operator,predicate_oper为空
   logical_operator = std::move(predicate_oper);
   return RC::SUCCESS;
 }
@@ -177,16 +192,25 @@ RC LogicalPlanGenerator::create_plan(
     const FieldMeta *field_meta = table->table_meta().field(i);
     fields.push_back(Field(table, field_meta));
   }
+  //创建获取表格算子变量table_get_oper并初始化
   unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, fields, false/*readonly*/));
-
+  //创建谓词算子predicate_oper
   unique_ptr<LogicalOperator> predicate_oper;
+
+  //从filter_stmt获取比较表达式，并传入predicate_oper算子中
   RC rc = create_plan(filter_stmt, predicate_oper);
   if (rc != RC::SUCCESS) {
     return rc;
   }
 
+  //创建删除逻辑算子
   unique_ptr<LogicalOperator> delete_oper(new DeleteLogicalOperator(table));
 
+  /**
+   * 如果谓词算子不为空，则谓词算子添加获取表格算子为儿子；否则删除算子直接添获取表格为儿子
+   * 即一个sql语句中如果有where语句，则from获取表格后要进入where谓词语句，最后再进入delete删除语句，
+   * 否则，from获取表格以后，没有where语句，直接进入delete删除语句
+  */
   if (predicate_oper) {
     predicate_oper->add_child(std::move(table_get_oper));
     delete_oper->add_child(std::move(predicate_oper));
@@ -194,8 +218,51 @@ RC LogicalPlanGenerator::create_plan(
     delete_oper->add_child(std::move(table_get_oper));
   }
 
+  //将删除逻辑算子值转移给logical_operator,此时elete_oper == nullptr
   logical_operator = std::move(delete_oper);
   return rc;
+}
+
+RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, std::unique_ptr<LogicalOperator> &logical_operator)
+{
+  //获取数据
+  Table *table = update_stmt->table();
+  const FieldMeta *fieldmeta = update_stmt->fieldmeta();
+  const Value *values = update_stmt->values();
+  FilterStmt *filter_stmt = update_stmt->filter_stmt();
+
+  //获取表格所有字段
+  std::vector<Field> fields;
+  for (int i = table->table_meta().sys_field_num(); i < table->table_meta().field_num(); i++) {
+    const FieldMeta *field_meta = table->table_meta().field(i);
+    fields.push_back(Field(table, field_meta));
+  }
+
+  //获取表格数据的算子
+  unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, fields, false/*readonly*/));
+
+  //创建谓词逻辑算子，用于过滤获得的表格
+  unique_ptr<LogicalOperator> predicate_oper;
+  //从filter_stmt获取比较表达式，并传入predicate_oper算子中
+  RC rc = create_plan(filter_stmt, predicate_oper);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  //创建更新逻辑算子
+  unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table,fieldmeta,values));
+
+  if (predicate_oper) {
+    predicate_oper->add_child(std::move(table_get_oper));
+    update_oper->add_child(std::move(predicate_oper));
+  } else {
+    update_oper->add_child(std::move(table_get_oper));
+  }
+
+  logical_operator = std::move(update_oper);
+  return rc;
+
+  return RC::SUCCESS;
 }
 
 RC LogicalPlanGenerator::create_plan(

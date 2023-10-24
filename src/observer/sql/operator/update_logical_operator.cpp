@@ -9,18 +9,11 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 //
-// Created by Wangyunlai on 2022/12/15
+// Created by WangYunlai on 2022/6/27.
 //
 
-#include "sql/operator/table_get_logical_operator.h"
+#include "sql/operator/update_logical_operator.h"
 
-//表获取逻辑运算符
-TableGetLogicalOperator::TableGetLogicalOperator(Table *table, const std::vector<Field> &fields, bool readonly)
-    : table_(table), fields_(fields), readonly_(readonly)
+UpdateLogicalOperator::UpdateLogicalOperator(Table *table,const FieldMeta *fieldmeta,const Value *values) 
+      : table_(table),fieldmeta_(fieldmeta),values_(values)
 {}
-
-//设置谓词，转移Expression向量指针权限
-void TableGetLogicalOperator::set_predicates(std::vector<std::unique_ptr<Expression>> &&exprs)
-{
-  predicates_ = std::move(exprs);
-}

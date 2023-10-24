@@ -12,28 +12,30 @@ See the Mulan PSL v2 for more details. */
 // Created by Wangyunlai on 2023/6/13.
 //
 
-#include "sql/executor/update_table_executor.h"
+#include "sql/executor/update_executor.h"
 
 #include "session/session.h"
 #include "common/log/log.h"
 #include "storage/table/table.h"
-#include "sql/stmt/update_table_stmt.h"
+#include "sql/stmt/update_stmt.h"
 #include "event/sql_event.h"
 #include "event/session_event.h"
 #include "storage/db/db.h"
 
 RC UpdateTableExecutor::execute(SQLStageEvent *sql_event)
 {
+  RC rc = RC::SUCCESS;
   // Stmt *stmt = sql_event->stmt();
   // Session *session = sql_event->session_event()->session();
-  // ASSERT(stmt->type() == StmtType::UPDATE_TABLE, 
+  // ASSERT(stmt->type() == StmtType::UPDATE, 
   //        "update table executor can not run this command: %d", static_cast<int>(stmt->type()));
 
-  // UpdateTableStmt *update_table_stmt = static_cast<UpdateTableStmt *>(stmt);
+  // UpdateStmt *update_stmt = static_cast<UpdateStmt *>(stmt);
 
-  // const char *table_name = update_table_stmt->table_name().c_str();
-  // RC rc = session->get_current_db()->update_table(table_name, attribute_count, update_table_stmt->attr_infos().data());
-
-  // return rc;
-  return RC::SUCCESS;
+  // Table *table = update_stmt->table();
+  // const FieldMeta *fieldmeta = update_stmt->fieldmeta();
+  // const Value *values = update_stmt->values();
+  // std::vector<ConditionSqlNode> conditions = update_stmt->conditions();
+  // rc = table->update_record(table,fieldmeta,values,conditions);
+  return rc;
 }

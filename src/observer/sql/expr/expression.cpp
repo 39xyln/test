@@ -78,7 +78,7 @@ RC CastExpr::try_get_value(Value &value) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+//比较表达式
 ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<Expression> right)
     : comp_(comp), left_(std::move(left)), right_(std::move(right))
 {}

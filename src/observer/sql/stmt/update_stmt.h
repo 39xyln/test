@@ -22,6 +22,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/field/field_meta.h"
 
 class Table;
+class FilterStmt;
 
 /**
  * @brief 更新语句
@@ -36,7 +37,7 @@ public:
   //UpdateStmt(Table *table, Value *values, int value_amount);
 
   //更新表需要表名、字段、更改的值以及过滤的条件
-  UpdateStmt(Table *table,const FieldMeta *fieldmeta,const Value *values, std::vector<ConditionSqlNode> conditions);
+  UpdateStmt(Table *table, const FieldMeta *fieldmeta, const Value *values, FilterStmt *filter_stmt);
 
 public:
   static RC create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt);
@@ -54,9 +55,9 @@ public:
   {
     return values_;
   }
-  const std::vector<ConditionSqlNode> &conditions() const
+  FilterStmt *filter_stmt() const
   {
-    return conditions_;
+    return filter_stmt_;
   }
   StmtType type() const override
   {
@@ -68,5 +69,5 @@ private:
   Table *table_ = nullptr;
   const FieldMeta *fieldmeta_= nullptr;
   const Value *values_ = nullptr;
-  std::vector<ConditionSqlNode> conditions_;
+  FilterStmt *filter_stmt_ = nullptr;
 };

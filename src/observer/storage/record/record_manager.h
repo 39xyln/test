@@ -182,6 +182,14 @@ public:
   RC delete_record(const RID *rid);
 
   /**
+   * @brief 更新一条记录
+   *
+   * @param data 要更新的记录
+   * @param rid  如果更新成功，通过这个参数返回插入的位置
+   */
+  RC update_record(const FieldMeta *fieldmeta, const Value *values, RID *rid);
+
+  /**
    * @brief 获取指定位置的记录数据
    *
    * @param rid 指定的位置
@@ -265,6 +273,14 @@ public:
    * @param rid 待删除记录的标识符
    */
   RC delete_record(const RID *rid);
+
+  /**
+   * @brief 更新一条记录
+   *
+   * @param data 要更新的记录
+   * @param rid  如果更新成功，通过这个参数返回插入的位置
+   */
+  RC update_record(const FieldMeta *fieldmeta, const Value *values, RID *rid);
 
   /**
    * @brief 插入一个新的记录到指定文件中，并返回该记录的标识符

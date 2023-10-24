@@ -12,7 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by Wangyunlai on 2022/5/22.
 //
 
-#include "sql/stmt/update_table_stmt.h"
+#include "sql/stmt/update_stmt.h"
 #include "common/log/log.h"
 #include "sql/stmt/filter_stmt.h"
 #include "storage/db/db.h"
@@ -26,8 +26,8 @@ See the Mulan PSL v2 for more details. */
 //     : table_(table),fieldmeta_(fieldmeta), values_(values),conditions_(conditions)
 // {}
 
-UpdateStmt::UpdateStmt(Table *table,const FieldMeta *fieldmeta,const Value *values,std::vector<ConditionSqlNode> conditions)
-    : table_(table),fieldmeta_(fieldmeta), values_(values), conditions_(conditions)
+UpdateStmt::UpdateStmt(Table *table,const FieldMeta *fieldmeta,const Value *values,FilterStmt *filter_stmt)
+    : table_(table),fieldmeta_(fieldmeta), values_(values), filter_stmt_(filter_stmt)
 {}
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
@@ -66,9 +66,8 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
     return rc;
   }
 
-  std::vector<ConditionSqlNode> conditions = update.conditions;
   const Value *values = &(update.value);
 
-  stmt = new UpdateStmt(table, field_meta, values, conditions);
+  stmt = new UpdateStmt(table, field_meta, values, filter_stmt);
   return RC::SUCCESS;
 }

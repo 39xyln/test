@@ -28,6 +28,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/index.h"
 #include "storage/index/bplus_tree_index.h"
 #include "storage/trx/trx.h"
+#include "table.h"
 
 Table::~Table()
 {
@@ -128,6 +129,13 @@ RC Table::create(int32_t table_id,
 
 
 //删除表
+/**
+ * sql:      "drop table test;"
+ * 路径不要和db里的path搞混
+ * 表文件路径   path:     "miniob/db/sys/test.table"
+ * 表名字       name:     "test"
+ * 数据库路径   base_dir: "miniob/db/sys"
+*/
 RC Table::destroy(const char *path, const char *name, const char *base_dir)
 {
   if (common::is_blank(name)) {
@@ -258,6 +266,7 @@ RC Table::open(const char *meta_file, const char *base_dir)
   return rc;
 }
 
+//插入记录
 RC Table::insert_record(Record &record)
 {
   RC rc = RC::SUCCESS;
@@ -522,6 +531,12 @@ RC Table::delete_record(const Record &record)
   }
   rc = record_handler_->delete_record(&record.rid());
   return rc;
+}
+
+RC Table::update_record(const FieldMeta *fieldmeta, const Value *values,Record &record) {
+  RC rc = RC::SUCCESS;
+  rc = record_handler_ -> update_record(fieldmeta,values,&record.rid());
+  return rc;  
 }
 
 RC Table::insert_entry_of_indexes(const char *record, const RID &rid)

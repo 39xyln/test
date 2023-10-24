@@ -25,6 +25,7 @@ Rewriter::Rewriter()
   rewrite_rules_.emplace_back(new PredicatePushdownRewriter);
 }
 
+//对当前算子及其所有算子遍历所有重写规则
 RC Rewriter::rewrite(std::unique_ptr<LogicalOperator> &oper, bool &change_made)
 {
   RC rc = RC::SUCCESS;

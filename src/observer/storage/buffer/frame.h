@@ -137,7 +137,7 @@ private:
   friend class  BufferPool;
 
   bool              dirty_     = false;
-  std::atomic<int>  pin_count_{0};
+  std::atomic<int>  pin_count_{0};  //原子型，装着int，不会被竞争，更安全
   unsigned long     acc_time_  = 0;
   int               file_desc_ = -1;
   Page              page_;

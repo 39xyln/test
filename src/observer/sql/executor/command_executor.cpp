@@ -21,7 +21,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/executor/desc_table_executor.h"
 #include "sql/executor/help_executor.h"
 #include "sql/executor/show_tables_executor.h"
-#include "sql/executor/update_table_executor.h"
+#include "sql/executor/update_executor.h"
 #include "sql/executor/trx_begin_executor.h"
 #include "sql/executor/trx_end_executor.h"
 #include "sql/executor/set_variable_executor.h"

@@ -42,18 +42,21 @@ RC OptimizeStage::handle_request(SQLStageEvent *sql_event)
     return rc;
   }
 
+  //重写
   rc = rewrite(logical_operator);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to rewrite plan. rc=%s", strrc(rc));
     return rc;
   }
 
+  //优化 TODO
   rc = optimize(logical_operator);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to optimize plan. rc=%s", strrc(rc));
     return rc;
   }
 
+  //转化为物理算子，从做什么->怎么做
   unique_ptr<PhysicalOperator> physical_operator;
   rc = generate_physical_plan(logical_operator, physical_operator);
   if (rc != RC::SUCCESS) {
@@ -61,6 +64,7 @@ RC OptimizeStage::handle_request(SQLStageEvent *sql_event)
     return rc;
   }
 
+  //设置算子，执行计划
   sql_event->set_operator(std::move(physical_operator));
 
   return rc;
@@ -72,6 +76,7 @@ RC OptimizeStage::optimize(unique_ptr<LogicalOperator> &oper)
   return RC::SUCCESS;
 }
 
+//获取物理算子
 RC OptimizeStage::generate_physical_plan(
     unique_ptr<LogicalOperator> &logical_operator, unique_ptr<PhysicalOperator> &physical_operator)
 {
@@ -83,6 +88,7 @@ RC OptimizeStage::generate_physical_plan(
   return rc;
 }
 
+//重写
 RC OptimizeStage::rewrite(unique_ptr<LogicalOperator> &logical_operator)
 {
   RC rc = RC::SUCCESS;
@@ -100,6 +106,7 @@ RC OptimizeStage::rewrite(unique_ptr<LogicalOperator> &logical_operator)
   return rc;
 }
 
+//创建逻辑计划函数
 RC OptimizeStage::create_logical_plan(SQLStageEvent *sql_event, unique_ptr<LogicalOperator> &logical_operator)
 {
   Stmt *stmt = sql_event->stmt();

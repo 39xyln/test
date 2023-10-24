@@ -62,7 +62,9 @@ struct BPFileHeader
   char bitmap[0];           //! 页面分配位图, 第0个页面(就是当前页面)，总是1
 
   /**
-   * 能够分配的最大的页面个数，即bitmap的字节数 乘以8
+   * 能够分配的最大的页面个数，即bitmap的字节数 乘以8 = bitmap可以装下的所有值
+   * 比如可以分配40个页面，那bitmap应有四十格，由于bitmap是char类型(1bit),8位=1字节
+   * 那么此时就5字节而已，反推则8*5 = 40
    */
   static const int MAX_PAGE_NUM = (BP_PAGE_DATA_SIZE - sizeof(page_count) - sizeof(allocated_pages)) * 8;
 

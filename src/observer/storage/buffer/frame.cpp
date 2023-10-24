@@ -26,11 +26,13 @@ bool FrameId::equal_to(const FrameId &other) const
   return file_desc_ == other.file_desc_ && page_num_ == other.page_num_;
 }
 
+//判断页帧号是否相等
 bool FrameId::operator==(const FrameId &other) const
 {
   return this->equal_to(other);
 }
 
+//返回哈希值
 size_t FrameId::hash() const
 {
   return (static_cast<size_t>(file_desc_) << 32L) | page_num_;
@@ -45,6 +47,7 @@ PageNum FrameId::page_num() const
   return page_num_;
 }
 
+//返回页帧标识符的内容string
 string to_string(const FrameId &frame_id)
 {
   stringstream ss;
@@ -53,6 +56,7 @@ string to_string(const FrameId &frame_id)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//获取默认调试标识符
 intptr_t get_default_debug_xid()
 {
   #if 0
@@ -77,6 +81,7 @@ void Frame::write_latch()
   write_latch(get_default_debug_xid());
 }
 
+//写锁
 void Frame::write_latch(intptr_t xid)
 {
   {
@@ -106,6 +111,7 @@ void Frame::write_unlatch()
   write_unlatch(get_default_debug_xid());
 }
 
+//写解锁
 void Frame::write_unlatch(intptr_t xid)
 {
   // 因为当前已经加着写锁，而且写锁只有一个，所以不再加debug_lock来做校验
@@ -227,6 +233,7 @@ void Frame::read_unlatch(intptr_t xid)
   lock_.unlock_shared();
 }
 
+//添加引用计数
 void Frame::pin()
 {
   std::scoped_lock debug_lock(debug_lock_);
@@ -240,6 +247,17 @@ void Frame::pin()
             pin_count, file_desc_, page_.page_num, xid, lbt());
 }
 
+/**
+ * 减少引用计数
+ * 
+ * 写锁持有者：在取消引用（unpin）帧之前，应该确保没有任何人持有写锁。
+ * 写锁的目的是保护数据的一致性，当有一个线程持有写锁时，其他线程将无法读取或修改数据。
+ * 如果在取消引用帧时存在写锁持有者，可能意味着帧中的数据正在被修改，这可能导致取消引用操作引发数据不一致的情况。
+ * 
+ * 读锁持有者：读锁的目的是允许多个线程同时读取数据，以提高并发性能。
+ * 但在取消引用帧时，如果存在读锁持有者，则表示有线程正在使用（读取）该帧的数据。在取消引用帧之前，应该确保没有任何人持有读锁。
+ * 否则，取消引用可能导致其他线程访问无效的数据或访问已被释放的帧。
+*/
 int Frame::unpin()
 {
   intptr_t xid = get_default_debug_xid();
@@ -269,7 +287,8 @@ int Frame::unpin()
   return pin_count;
 }
 
-
+//获取高精度(纳米级)的当前时间戳
+//在两个地方设置可以获取高精度的执行时间
 unsigned long current_time()
 {
   struct timespec tp;
@@ -282,6 +301,7 @@ void Frame::access()
   acc_time_ = current_time();
 }
 
+//返回frame信息
 string to_string(const Frame &frame)
 {
   stringstream ss;

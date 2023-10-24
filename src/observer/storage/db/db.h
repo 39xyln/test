@@ -21,6 +21,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/rc.h"
 #include "sql/parser/parse_defs.h"
+#include "storage/field/field_meta.h"
 
 class Table;
 class CLogManager;
@@ -47,6 +48,7 @@ public:
 
   RC create_table(const char *table_name, int attribute_count, const AttrInfoSqlNode *attributes);
   RC drop_table(const char *table_name);
+  // RC update(Table *table,const FieldMeta *fieldmeta,const Value *values,std::vector<ConditionSqlNode> &conditions);
 
 
   Table *find_table(const char *table_name) const;

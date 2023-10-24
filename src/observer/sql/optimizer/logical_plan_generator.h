@@ -24,9 +24,11 @@ class SelectStmt;
 class FilterStmt;
 class InsertStmt;
 class DeleteStmt;
+class UpdateStmt;
 class ExplainStmt;
 class LogicalOperator;
 
+//逻辑计划生成器
 class LogicalPlanGenerator
 {
 public:
@@ -41,5 +43,6 @@ private:
   RC create_plan(FilterStmt *filter_stmt, std::unique_ptr<LogicalOperator> &logical_operator);
   RC create_plan(InsertStmt *insert_stmt, std::unique_ptr<LogicalOperator> &logical_operator);
   RC create_plan(DeleteStmt *delete_stmt, std::unique_ptr<LogicalOperator> &logical_operator);
+  RC create_plan(UpdateStmt *Update_stmt, std::unique_ptr<LogicalOperator> &logical_operator);
   RC create_plan(ExplainStmt *explain_stmt, std::unique_ptr<LogicalOperator> &logical_operator);
 };
