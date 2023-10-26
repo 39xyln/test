@@ -284,4 +284,18 @@ std::string double_to_str(double v)
 
   return std::string(buf, len);
 }
+
+std::string date_to_str(int v)
+{
+  char *str = new char[10];
+  int year, month, day;
+  year = v / 500;
+  month = (v % 500) / 35;
+  day = (v % 500 % 35);
+  sprintf(str,"%04d-%02d-%02d", year, month, day);
+  std::string value_str = std::string(str, 10);
+
+  delete[] str;
+  return value_str;
+}
 }  // namespace common
