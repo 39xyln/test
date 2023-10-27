@@ -70,6 +70,7 @@ QUOTE            [\'\"]
 /* 规则匹配的优先级：*/
 /* 1. 匹配的规则长的优先 */
 /* 2. 写在最前面的优先 */
+/* 原来的日期为{QUOTE}[0-9]{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01]){QUOTE} */
 
 /* yylval 就可以认为是 yacc 中 %union 定义的结构体(union 结构) */
 %%
@@ -79,7 +80,7 @@ QUOTE            [\'\"]
 
 [\-]?{DIGIT}+                           yylval->number=atoi(yytext); RETURN_TOKEN(NUMBER);
 [\-]?{DIGIT}+{DOT}{DIGIT}+              yylval->floats=(float)(atof(yytext)); RETURN_TOKEN(FLOAT);
-{QUOTE}[0-9]{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01]){QUOTE}    yylval->string=strdup(yytext); RETURN_TOKEN(DATE);  
+{QUOTE}[0-9]{4}\-(0?[1-9]|[1-9][0-9])\-(0?[1-9]|[1-9][0-9]){QUOTE}    yylval->string=strdup(yytext); RETURN_TOKEN(DATE);  
 
 ";"                                     RETURN_TOKEN(SEMICOLON);
 {DOT}                                   RETURN_TOKEN(DOT);

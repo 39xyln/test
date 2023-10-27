@@ -245,10 +245,7 @@ int Value::compare(const Value &other) const
             other.str_value_.length());
       } break;
       case DATES: {
-        return common::compare_string((void *)this->str_value_.c_str(),
-            this->str_value_.length(),
-            (void *)other.str_value_.c_str(),
-            other.str_value_.length());
+        return common::compare_date((void *)&this->num_value_.date_value_, (void *)&other.num_value_.date_value_);
       } break;
       case BOOLEANS: {
         return common::compare_int((void *)&this->num_value_.bool_value_, (void *)&other.num_value_.bool_value_);
