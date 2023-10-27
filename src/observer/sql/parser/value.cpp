@@ -279,7 +279,7 @@ int Value::compare_like(const Value &other) const {
     other_str = std::regex_replace(other_str, std::regex("%"), ".*");
     other_str = std::regex_replace(other_str, std::regex("_"), ".");
 
-    // 在模式字符串两端添加 ^ 和 $ ,形成一个正则表达式
+    // 在模式字符串两端添加 ^ 和 $ ,匹配上行的开头和结尾
     other_str = "^" + other_str + "$";
     
     // 创建正则表达式对象
