@@ -123,6 +123,7 @@ bool DefaultConditionFilter::filter(const Record &rec) const
 {
   Value left_value;
   Value right_value;
+  int cmp_result;
 
   if (left_.is_attr) {  // value
     left_value.set_type(attr_type_);
@@ -138,28 +139,30 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     right_value.set_value(right_.value);
   }
 
-  int cmp_result = left_value.compare(right_value);
-
-  switch (comp_op_) {
-    case EQUAL_TO:
-      return 0 == cmp_result;
-    case LESS_EQUAL:
-      return cmp_result <= 0;
-    case NOT_EQUAL:
-      return cmp_result != 0;
-    case LESS_THAN:
-      return cmp_result < 0;
-    case GREAT_EQUAL:
-      return cmp_result >= 0;
-    case GREAT_THAN:
-      return cmp_result > 0;
-
-    default:
-      break;
+  if(comp_op_ == LIKE)  {
+    cmp_result = left_value.compare(right_value);
+    return 0 == cmp_result;
+  } else {
+    cmp_result = left_value.compare(right_value);
+    switch (comp_op_) {
+      case EQUAL_TO:
+        return 0 == cmp_result;
+      case LESS_EQUAL:
+        return cmp_result <= 0;
+      case NOT_EQUAL:
+        return cmp_result != 0;
+      case LESS_THAN:
+        return cmp_result < 0;
+      case GREAT_EQUAL:
+        return cmp_result >= 0;
+      case GREAT_THAN:
+         return cmp_result > 0;
+      default:
+        break;
+    }
   }
-
   LOG_PANIC("Never should print this.");
-  return cmp_result;  // should not go here
+  return false;  // should not go here
 }
 
 CompositeConditionFilter::~CompositeConditionFilter()
