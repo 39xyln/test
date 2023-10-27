@@ -13,6 +13,7 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include <sstream>
+#include <regex>
 #include "sql/parser/value.h"
 #include "storage/field/field.h"
 #include "common/log/log.h"
@@ -267,52 +268,30 @@ int Value::compare(const Value &other) const
 
 int Value::compare_like(const Value &other) const { 
 
-  if(other.attr_type_ == CHARS) {
+  if (other.attr_type_ == CHARS) {
+
+    //将字符串拿出来
     std::string this_str = this->to_string();
     std::string other_str = other.to_string();
-    int this_len = this_str.length();
-    int other_len = other_str.length();
+    
+    // 将模式字符串转换为正则表达式
+    // 替换 % 为 .* , 替换 _ 为 .
+    other_str = std::regex_replace(other_str, std::regex("%"), ".*");
+    other_str = std::regex_replace(other_str, std::regex("_"), ".");
 
-    //this(属性)  like  other(模糊查询内容(char))
-    //考虑到likeRight、likeLeft和like中%数量不一样，长度在里面判断
-    //likeRight "值%"
-    if(('%' != other_str[0]) && ('%' == other_str[other_len-1]))
-    {
-      if(other_len <= this_len + 1) {
-        for(int i = 0 ; i < other_len - 1;i ++ ) {
-          if((this_str[i] != other_str[i]) && ('_' != other_str[i])) {
-          return -1;
-          }
-        }
-      }
+    // 在模式字符串两端添加 ^ 和 $ ,形成一个正则表达式
+    other_str = "^" + other_str + "$";
+    
+    // 创建正则表达式对象
+    std::regex regex_like(other_str);
+    
+    // 使用正则表达式匹配当前字符串
+    // bool matches = std::regex_match(this_str, regex_like);
+    //判断是否匹配
+    if (std::regex_match(this_str, regex_like)) {
       return 0;
-    }
-
-    //likeLeft  "%值"
-    if(('%' == other_str[0]) && ('%' != other_str[other_len-1]))
-    {
-      if(other_len <= this_len + 1) {
-        int j = this_len-1;
-        for(int i = other_len - 1 ; i > 0;i-- ) {
-          if((this_str[j] != other_str[i]) && ('_' != other_str[i])) {
-            return -1;
-          }
-          j--;
-        }
-      }
-      return 0;
-    }
-    //like 可以利用子串查看"%值%"
-    if(('%' == other_str[0]) && ('%' == other_str[other_len-1]))
-    {
-      if(other_len <= this_len + 2) {
-        std::string needle = other_str.substr(1,other_len-2);
-        // const char *result = strstr(this_str.c_str(),needle.c_str());
-        if(nullptr == strstr(this_str.c_str(),needle.c_str())){
-          return -1;
-        }
-      }
-      return 0;
+    } else {
+      return -1;
     }
   }
   LOG_WARN("not supported");
