@@ -89,12 +89,15 @@ ComparisonExpr::~ComparisonExpr()
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
 {
   RC rc = RC::SUCCESS;
-  int cmp_result;
+  int cmp_result = left.compare(right);
   result = false;
 
   if(comp_ == LIKE)  {
     cmp_result = left.compare_like(right);
     result = (0 == cmp_result);
+  }else if(comp_ == NOT_LIKE) {
+    cmp_result = left.compare_like(right);
+    result = (0 != cmp_result);
   }else {
     cmp_result = left.compare(right);
     switch (comp_) {

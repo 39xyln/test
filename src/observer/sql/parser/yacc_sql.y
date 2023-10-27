@@ -92,6 +92,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
         DATA
         INFILE
         EXPLAIN
+        NOT_T
         LIKE_T
         EQ
         LT
@@ -645,9 +646,7 @@ condition:
 
       delete $1;
       delete $3;
-    } 
-    ;
-
+    }
 comp_op:
       EQ { $$ = EQUAL_TO; }
     | LT { $$ = LESS_THAN; }
@@ -656,6 +655,7 @@ comp_op:
     | GE { $$ = GREAT_EQUAL; }
     | NE { $$ = NOT_EQUAL; }
     | LIKE_T { $$ = LIKE; }
+    | NOT_T LIKE_T { $$ = NOT_LIKE; }
     ;
 
 load_data_stmt:
